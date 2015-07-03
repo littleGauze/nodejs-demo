@@ -4,11 +4,17 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var flash = require('connect-flash');
+var methodOverride = require('method-override');
+var MongoStore = require('connect-mongo')(session);
 var ejs = require("ejs");
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var login = require('./routes/login');
+var logout = require('./routes/logout');
+var home = require('./routes/home');
 
 var app = express();
 
@@ -24,10 +30,29 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(flash());
+app.use(session({
+    secret: 'fens.me',
+    store: new MongoStore({
+        db: 'microblog',
+        resave:true,
+        saveUninitialized:true
+    }),
+    cookie: {
+        maxAge: 900000
+    }
+}));
 
 app.use('/', routes);
 app.use('/users', users);
 app.use("/login", login);
+app.use('/home', home);
+app.use("/logout", logout);
+
+app.use(function(req, res, next){
+    res.locals.user = req.session.user;
+    next();
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
