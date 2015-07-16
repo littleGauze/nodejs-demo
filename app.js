@@ -33,26 +33,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(flash());
 app.use(session({
     secret: 'fens.me',
-    store: new MongoStore({
-        db: 'microblog',
-        resave:true,
-        saveUninitialized:true
-    }),
+    resave: false,
+    saveUninitialized: true,
     cookie: {
         maxAge: 900000
     }
 }));
+
+app.use(function(req, res, next){
+    res.locals.user = req.session.user;
+    next();
+});
 
 app.use('/', routes);
 app.use('/users', users);
 app.use("/login", login);
 app.use('/home', home);
 app.use("/logout", logout);
-
-app.use(function(req, res, next){
-    res.locals.user = req.session.user;
-    next();
-});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
